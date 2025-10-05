@@ -112,8 +112,19 @@ class MenuScanProvider with ChangeNotifier {
       _menuItems = [];
 
       for (final block in _textBlocks) {
-        // 翻訳
-        final translated = await _translationService.translate(block.text);
+        // 翻訳（失敗時は元のテキストを使用）
+        String translated;
+        try {
+          translated = await _translationService.translate(block.text);
+          // 翻訳結果が空の場合は元のテキストを使用
+          if (translated.trim().isEmpty) {
+            translated = block.text;
+          }
+        } catch (e) {
+          // 翻訳失敗時は元のテキストを使用
+          translated = block.text;
+          print('翻訳エラー: $e');
+        }
         
         // アレルギーチェック（キーワードベース）
         final detectedAllergens = _allergyService.detectAllergens(

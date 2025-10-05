@@ -116,8 +116,8 @@ class _TextOverlayPainter extends CustomPainter {
       // 背景を描画（元のテキストを隠す）
       final bgPaint = Paint()
         ..color = block.isWarning 
-            ? Colors.red.withOpacity(0.9) 
-            : Colors.white.withOpacity(0.9);
+            ? Colors.red.withValues(alpha: 0.9) 
+            : Colors.white.withValues(alpha: 0.9);
       
       canvas.drawRect(scaledBox, bgPaint);
 
@@ -133,31 +133,7 @@ class _TextOverlayPainter extends CustomPainter {
       final textToShow = showOriginal ? block.text : block.translatedText;
       
       if (textToShow.isNotEmpty) {
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: textToShow,
-            style: TextStyle(
-              color: block.isWarning ? Colors.white : Colors.black,
-              fontSize: _calculateFontSize(scaledBox),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.ltr,
-        );
-
-        textPainter.layout(
-          maxWidth: scaledBox.width - 8,
-        );
-
-        // テキストを中央に配置
-        final xCenter = scaledBox.left + (scaledBox.width - textPainter.width) / 2;
-        final yCenter = scaledBox.top + (scaledBox.height - textPainter.height) / 2;
-
-        textPainter.paint(
-          canvas,
-          Offset(xCenter, yCenter),
-        );
+        _drawText(canvas, textToShow, scaledBox, block.isWarning);
       }
 
       // 警告アイコンを表示
@@ -167,14 +143,131 @@ class _TextOverlayPainter extends CustomPainter {
     }
   }
 
+  void _drawText(Canvas canvas, String text, Rect box, bool isWarning) {
+    // テキストが空の場合はデバッグ表示
+    if (text.trim().isEmpty) {
+      _drawDebugMarker(canvas, box, '空');
+      return;
+    }
+
+    // パディング
+    const padding = 4.0;
+    final maxWidth = box.width - padding * 2;
+    final maxHeight = box.height - padding * 2;
+
+    if (maxWidth <= 0 || maxHeight <= 0) {
+      _drawDebugMarker(canvas, box, '小');
+      return;
+    }
+
+    // 初期フォントサイズを計算
+    double fontSize = _calculateFontSize(box);
+    TextPainter? textPainter;
+
+    // テキストがボックスに収まるまでフォントサイズを調整
+    for (int i = 0; i < 10; i++) {
+      textPainter = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: TextStyle(
+            color: isWarning ? Colors.white : Colors.black,
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            height: 1.1,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+        maxLines: _getMaxLines(box.height, fontSize),
+        ellipsis: '...',
+      );
+
+      textPainter.layout(maxWidth: maxWidth);
+
+      // テキストが収まったらループを抜ける
+      if (textPainter.height <= maxHeight) {
+        break;
+      }
+
+      // フォントサイズを縮小
+      fontSize = fontSize * 0.9;
+      if (fontSize < 8) {  // 最小フォントサイズを8に
+        fontSize = 8;
+        break;
+      }
+    }
+
+    if (textPainter == null) return;
+
+    // 最終レイアウト
+    textPainter.layout(maxWidth: maxWidth);
+
+    // テキストを中央に配置
+    final x = box.left + padding + (maxWidth - textPainter.width) / 2;
+    final y = box.top + padding + (maxHeight - textPainter.height) / 2;
+
+    // 安全に座標をクランプ
+    final safeX = x.clamp(box.left, (box.right - textPainter.width).clamp(box.left, box.right));
+    final safeY = y.clamp(box.top, (box.bottom - textPainter.height).clamp(box.top, box.bottom));
+
+    // クリッピングしてはみ出しを防ぐ
+    canvas.save();
+    canvas.clipRect(box);
+    textPainter.paint(canvas, Offset(safeX, safeY));
+    canvas.restore();
+  }
+
+  void _drawDebugMarker(Canvas canvas, Rect box, String marker) {
+    // デバッグ用マーカーを描画
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: marker,
+        style: const TextStyle(
+          color: Colors.red,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    final x = box.left + (box.width - textPainter.width) / 2;
+    final y = box.top + (box.height - textPainter.height) / 2;
+    textPainter.paint(canvas, Offset(x, y));
+  }
+
+  int _getMaxLines(double height, double fontSize) {
+    // 高さに基づいて最大行数を計算
+    final lines = (height / (fontSize * 1.1)).floor();
+    return lines.clamp(1, 3);
+  }
+
   double _calculateFontSize(Rect box) {
-    // ボックスの高さに基づいてフォントサイズを計算
+    // ボックスのサイズに基づいてフォントサイズを計算
     final height = box.height;
-    if (height < 20) return 8;
-    if (height < 30) return 10;
-    if (height < 40) return 12;
-    if (height < 60) return 14;
-    return 16;
+    final width = box.width;
+    
+    double size;
+    if (height < 20) {
+      size = 10;  // 最小サイズを上げる
+    } else if (height < 30) {
+      size = 12;
+    } else if (height < 40) {
+      size = 14;
+    } else if (height < 60) {
+      size = 16;
+    } else {
+      size = 18;
+    }
+
+    // 幅が狭い場合は調整
+    if (width < 60) {
+      size = size.clamp(9.0, 12.0);
+    } else if (width < 100) {
+      size = size.clamp(10.0, 14.0);
+    }
+
+    return size;
   }
 
   void _drawWarningIcon(Canvas canvas, Rect box) {

@@ -7,14 +7,22 @@ class TranslationService {
   Future<String> translateToJapanese(String text) async {
     if (text.isEmpty) return '';
     
+    // 空白のみの場合もスキップ
+    if (text.trim().isEmpty) return text;
+    
     try {
       final translation = await _translator.translate(
         text,
         to: 'ja',
       );
-      return translation.text;
+      
+      // 翻訳結果が空でないことを確認
+      final result = translation.text.trim();
+      return result.isEmpty ? text : result;
     } catch (e) {
-      throw Exception('翻訳に失敗しました: $e');
+      print('Translation error: $e');
+      // 翻訳失敗時は元のテキストを返す
+      return text;
     }
   }
 
