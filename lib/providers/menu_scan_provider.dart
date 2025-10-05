@@ -128,9 +128,10 @@ class MenuScanProvider with ChangeNotifier {
           print('翻訳エラー: $e');
         }
 
-        // アレルギーチェック（キーワードベース）
-        final detectedAllergens = _allergyService.detectAllergens(
+        // アレルギーチェック（総合的な検出）
+        final detectedAllergens = _allergyService.detectAllergensComprehensive(
           block.text,
+          translated,
           _userAllergies,
         );
 
