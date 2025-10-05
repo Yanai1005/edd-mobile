@@ -13,7 +13,7 @@ void main() {
       final allergies = AllergyService.getAllergies();
 
       expect(allergies, isNotEmpty);
-      expect(allergies.length, 9);
+      expect(allergies.length, 11);
       expect(allergies.any((a) => a.name == '小麦'), true);
       expect(allergies.any((a) => a.name == '卵'), true);
     });
