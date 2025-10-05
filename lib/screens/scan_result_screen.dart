@@ -12,7 +12,6 @@ class ScanResultScreen extends StatefulWidget {
 }
 
 class _ScanResultScreenState extends State<ScanResultScreen> {
-  bool _showOverlay = true;
   bool _showOriginal = false;
 
   @override
@@ -22,27 +21,16 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         title: const Text('スキャン結果'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
-          // 表示切り替えボタン
+          // 言語切り替えボタン
           IconButton(
-            icon: Icon(_showOverlay ? Icons.list : Icons.image),
-            tooltip: _showOverlay ? 'リスト表示' : 'オーバーレイ表示',
+            icon: Icon(_showOriginal ? Icons.translate : Icons.language),
+            tooltip: _showOriginal ? '日本語' : '原文',
             onPressed: () {
               setState(() {
-                _showOverlay = !_showOverlay;
+                _showOriginal = !_showOriginal;
               });
             },
           ),
-          // 言語切り替えボタン（オーバーレイ表示時のみ）
-          if (_showOverlay)
-            IconButton(
-              icon: Icon(_showOriginal ? Icons.translate : Icons.language),
-              tooltip: _showOriginal ? '日本語' : '原文',
-              onPressed: () {
-                setState(() {
-                  _showOriginal = !_showOriginal;
-                });
-              },
-            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -61,9 +49,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             );
           }
 
-          return _showOverlay 
-              ? _buildOverlayView(provider)
-              : _buildListView(provider);
+          return _buildOverlayView(provider);
         },
       ),
     );
@@ -145,85 +131,34 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
               showOriginal: _showOriginal,
             ),
           ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildListView(MenuScanProvider provider) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 撮影した画像
-          Container(
-            height: 250,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-            ),
-            child: Image.file(
-              provider.scannedImage!,
-              fit: BoxFit.contain,
-            ),
-          ),
-          
-          // 警告サマリー
-          if (provider.menuItems.any((item) => item.isWarning))
-            Container(
+          // 料理リスト
+          if (provider.menuItems.isNotEmpty) ...[
+            const Divider(thickness: 2),
+            Padding(
               padding: const EdgeInsets.all(16),
-              color: Colors.red.shade100,
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.warning,
-                    color: Colors.red,
-                    size: 32,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          '⚠️ 警告',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
+                  Row(
+                    children: [
+                      Icon(Icons.restaurant_menu, color: Colors.blue.shade700),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '料理一覧',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
-                        Text(
-                          'アレルギー物質が検出された料理があります',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.red.shade900,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 16),
+                  ...provider.menuItems.map((item) => _buildMenuItem(item)),
                 ],
               ),
             ),
-
-          // メニューアイテムリスト
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'メニュー一覧',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ...provider.menuItems.map((item) => _buildMenuItem(item)),
-              ],
-            ),
-          ),
+          ],
         ],
       ),
     );
@@ -231,99 +166,126 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
 
   Widget _buildMenuItem(MenuItem item) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: item.isWarning ? 4 : 1,
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: item.isWarning ? 3 : 1,
       color: item.isWarning ? Colors.red.shade50 : Colors.white,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 警告アイコン
-            if (item.isWarning)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(4),
+            // 料理名（翻訳）
+            Row(
+              children: [
+                Icon(
+                  Icons.restaurant,
+                  size: 20,
+                  color: item.isWarning ? Colors.red : Colors.blue.shade700,
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.warning, color: Colors.white, size: 16),
-                    SizedBox(width: 4),
-                    Text(
-                      '注意',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    item.translatedText,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: item.isWarning ? Colors.red.shade900 : Colors.black,
                     ),
-                  ],
+                  ),
+                ),
+                if (item.isWarning)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.warning, color: Colors.white, size: 14),
+                        SizedBox(width: 4),
+                        Text(
+                          '注意',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+
+            // 原文（小さく表示）
+            if (item.originalText != item.translatedText) ...[
+              const SizedBox(height: 4),
+              Text(
+                item.originalText,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
-            if (item.isWarning) const SizedBox(height: 12),
-
-            // 原文
-            Text(
-              item.originalText,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // 翻訳
-            Text(
-              item.translatedText,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            ],
 
             // アレルギー物質
             if (item.detectedAllergens.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              const Divider(),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.error, color: Colors.red, size: 20),
-                  const SizedBox(width: 8),
-                  const Text(
-                    '検出されたアレルギー物質:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: item.detectedAllergens
-                    .map((allergen) => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.shade300),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.error, color: Colors.red, size: 18),
+                        const SizedBox(width: 6),
+                        const Text(
+                          '含まれるアレルギー物質',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
                             color: Colors.red,
-                            borderRadius: BorderRadius.circular(16),
+                            fontSize: 13,
                           ),
-                          child: Text(
-                            allergen,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ))
-                    .toList(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: item.detectedAllergens
+                          .map((allergen) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  allergen,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                  ],
+                ),
               ),
             ],
           ],
