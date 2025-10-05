@@ -151,10 +151,72 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const Spacer(),
+                      Text(
+                        '${provider.menuItems.length}件',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
                     ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '料理名と思われるテキストのみを表示しています',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   ...provider.menuItems.map((item) => _buildMenuItem(item)),
+                ],
+              ),
+            ),
+          ] else if (provider.textBlocks.isNotEmpty) ...[
+            const Divider(thickness: 2),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.grey.shade600),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '料理一覧',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.lightbulb_outline, color: Colors.grey.shade600),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '料理名が見つかりませんでした。\n画像上のオーバーレイ表示で確認してください。',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -174,8 +236,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 料理名（翻訳）
+            // 料理名と価格
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
                   Icons.restaurant,
@@ -184,13 +247,31 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    item.translatedText,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: item.isWarning ? Colors.red.shade900 : Colors.black,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 料理名（翻訳）
+                      Text(
+                        item.translatedText,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: item.isWarning ? Colors.red.shade900 : Colors.black,
+                        ),
+                      ),
+                      // 価格（あれば表示）
+                      if (item.price != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          item.price!,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 if (item.isWarning)

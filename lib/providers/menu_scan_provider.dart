@@ -6,12 +6,14 @@ import '../services/camera_service.dart';
 import '../services/ocr_service.dart';
 import '../services/translation_service.dart';
 import '../services/allergy_service.dart';
+import '../services/layout_analysis_service.dart';
 
 class MenuScanProvider with ChangeNotifier {
   final CameraService _cameraService = CameraService();
   final OcrService _ocrService = OcrService();
   final TranslationService _translationService = TranslationService();
   final AllergyService _allergyService = AllergyService();
+  final LayoutAnalysisService _layoutService = LayoutAnalysisService();
 
   File? _scannedImage;
   String _recognizedText = '';
@@ -43,12 +45,12 @@ class MenuScanProvider with ChangeNotifier {
   Future<void> updateUserAllergies(List<String> allergies) async {
     _userAllergies = allergies;
     await _allergyService.saveUserAllergies(allergies);
-    
+
     // 既存のメニューアイテムを再チェック
     if (_menuItems.isNotEmpty) {
       _recheckMenuItems();
     }
-    
+
     notifyListeners();
   }
 
@@ -98,7 +100,7 @@ class MenuScanProvider with ChangeNotifier {
 
       // 1. OCRでテキストと位置情報を認識
       _textBlocks = await _ocrService.recognizeTextWithPosition(_scannedImage!);
-      
+
       if (_textBlocks.isEmpty) {
         _setError('テキストを認識できませんでした');
         return;
@@ -125,7 +127,7 @@ class MenuScanProvider with ChangeNotifier {
           translated = block.text;
           print('翻訳エラー: $e');
         }
-        
+
         // アレルギーチェック（キーワードベース）
         final detectedAllergens = _allergyService.detectAllergens(
           block.text,
@@ -140,13 +142,17 @@ class MenuScanProvider with ChangeNotifier {
         );
         updatedBlocks.add(updatedBlock);
 
-        // MenuItemも作成（リスト表示用）
-        _menuItems.add(MenuItem(
-          originalText: block.text,
-          translatedText: translated,
-          detectedAllergens: detectedAllergens,
-          isWarning: detectedAllergens.isNotEmpty,
-        ));
+        // MenuItemも作成（料理名と思われるもののみ）
+        if (_isLikelyMenuItem(block.text, translated)) {
+          _menuItems.add(
+            MenuItem(
+              originalText: block.text,
+              translatedText: translated,
+              detectedAllergens: detectedAllergens,
+              isWarning: detectedAllergens.isNotEmpty,
+            ),
+          );
+        }
       }
 
       _textBlocks = updatedBlocks;
@@ -162,21 +168,23 @@ class MenuScanProvider with ChangeNotifier {
   void _recheckMenuItems() {
     final updatedItems = <MenuItem>[];
     final updatedBlocks = <TextBlock>[];
-    
+
     for (final item in _menuItems) {
       final detectedAllergens = _allergyService.detectAllergens(
         item.originalText,
         _userAllergies,
       );
 
-      updatedItems.add(MenuItem(
-        originalText: item.originalText,
-        translatedText: item.translatedText,
-        detectedAllergens: detectedAllergens,
-        isWarning: detectedAllergens.isNotEmpty,
-      ));
+      updatedItems.add(
+        MenuItem(
+          originalText: item.originalText,
+          translatedText: item.translatedText,
+          detectedAllergens: detectedAllergens,
+          isWarning: detectedAllergens.isNotEmpty,
+        ),
+      );
     }
-    
+
     // TextBlocksも更新
     for (final block in _textBlocks) {
       final detectedAllergens = _allergyService.detectAllergens(
@@ -184,14 +192,100 @@ class MenuScanProvider with ChangeNotifier {
         _userAllergies,
       );
 
-      updatedBlocks.add(block.copyWith(
-        detectedAllergens: detectedAllergens,
-        isWarning: detectedAllergens.isNotEmpty,
-      ));
+      updatedBlocks.add(
+        block.copyWith(
+          detectedAllergens: detectedAllergens,
+          isWarning: detectedAllergens.isNotEmpty,
+        ),
+      );
     }
-    
+
     _menuItems = updatedItems;
     _textBlocks = updatedBlocks;
+  }
+
+  // テキストが料理名らしいかどうかを判定
+  bool _isLikelyMenuItem(String original, String translated) {
+    final text = original.toLowerCase();
+    final translatedLower = translated.toLowerCase();
+
+    // 除外パターン1: 価格を示すもの
+    final pricePatterns = [
+      r'\$', // ドル記号
+      r'¥', // 円記号
+      r'円',
+      r'￥',
+      r'\d+\s*yen',
+      r'\d+\s*dollar',
+      r'\d+\s*usd',
+      r'^\d+$', // 数字のみ
+      r'^\d+\.\d+$', // 小数点付き数字のみ
+      r'%', // パーセント記号
+      r'％', // 全角パーセント
+    ];
+
+    for (final pattern in pricePatterns) {
+      if (RegExp(pattern, caseSensitive: false).hasMatch(text)) {
+        return false;
+      }
+    }
+
+    // 除外パターン2: サイズや単位を示すもの
+    final sizePatterns = [
+      r'\d+\s*g\b', // グラム
+      r'\d+\s*ml\b', // ミリリットル
+      r'\d+\s*l\b', // リットル
+      r'\d+\s*kg\b', // キログラム
+      r'\d+\s*oz\b', // オンス
+      r'\d+\s*lb\b', // ポンド
+      r'\d+\s*cm\b', // センチメートル
+      r'\d+\s*個\b', // 個数
+      r'\d+\s*人前\b', // 人前
+      // サイズ表記は除外しない（料理名に含まれる可能性があるため）
+    ];
+
+    for (final pattern in sizePatterns) {
+      if (RegExp(pattern, caseSensitive: false).hasMatch(text)) {
+        return false;
+      }
+    }
+
+    // 除外パターン3: 1文字のみのテキストは除外（2文字以上はOK）
+    if (original.trim().length <= 1) {
+      return false;
+    }
+
+    // 除外パターン3.5: 装飾的な記号のみ（ドット、ダッシュ、アスタリスクなど）
+    if (RegExp(r'^[\.\-_=\*~]+$').hasMatch(original.trim())) {
+      return false;
+    }
+
+    // 除外パターン4: 数字のみで構成されているもの
+    if (RegExp(r'^[\d\s\.\,\-\/]+$').hasMatch(text)) {
+      return false;
+    }
+
+    // 除外パターン5: 特殊文字のみ
+    if (RegExp(r'^[\W_]+$').hasMatch(text)) {
+      return false;
+    }
+
+    // 除外パターン6: 一般的なメニュー用語（ヘッダーなど）- より限定的に
+    final headerPatterns = [
+      r'^menu$',
+      r'^メニュー$',
+      r'^category$',
+      r'^カテゴリー?$',
+    ];
+
+    for (final pattern in headerPatterns) {
+      if (RegExp(pattern, caseSensitive: false).hasMatch(translatedLower)) {
+        return false;
+      }
+    }
+
+    // 通過したものは料理名として扱う
+    return true;
   }
 
   // スキャン結果をクリア
