@@ -91,7 +91,8 @@ class HomeScreen extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const AllergySettingsScreen(),
+                                    builder: (context) =>
+                                        const AllergySettingsScreen(),
                                   ),
                                 );
                               },
@@ -136,7 +137,8 @@ class HomeScreen extends StatelessWidget {
                       ElevatedButton.icon(
                         onPressed: () async {
                           await provider.takePicture();
-                          if (context.mounted && provider.menuItems.isNotEmpty) {
+                          if (context.mounted &&
+                              provider.menuItems.isNotEmpty) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -163,7 +165,8 @@ class HomeScreen extends StatelessWidget {
                       OutlinedButton.icon(
                         onPressed: () async {
                           await provider.pickFromGallery();
-                          if (context.mounted && provider.menuItems.isNotEmpty) {
+                          if (context.mounted &&
+                              provider.menuItems.isNotEmpty) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(

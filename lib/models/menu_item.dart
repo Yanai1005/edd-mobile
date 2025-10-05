@@ -3,8 +3,8 @@ class MenuItem {
   final String translatedText;
   final List<String> detectedAllergens;
   final bool isWarning;
-  final String? price;  // 価格情報（オプション）
-  final String? description;  // 説明文（オプション）
+  final String? price; // 価格情報（オプション）
+  final String? description; // 説明文（オプション）
 
   MenuItem({
     required this.originalText,

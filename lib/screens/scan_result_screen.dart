@@ -70,7 +70,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    _showOriginal 
+                    _showOriginal
                         ? '原文を表示しています。翻訳アイコンをタップで日本語表示'
                         : '翻訳を表示しています。言語アイコンをタップで原文表示',
                     style: TextStyle(
@@ -82,7 +82,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
               ],
             ),
           ),
-          
+
           // 警告サマリー
           if (provider.textBlocks.any((block) => block.isWarning))
             Container(
@@ -203,7 +203,8 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.lightbulb_outline, color: Colors.grey.shade600),
+                        Icon(Icons.lightbulb_outline,
+                            color: Colors.grey.shade600),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -256,7 +257,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: item.isWarning ? Colors.red.shade900 : Colors.black,
+                          color: item.isWarning
+                              ? Colors.red.shade900
+                              : Colors.black,
                         ),
                       ),
                       // 価格（あれば表示）
@@ -276,7 +279,8 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                 ),
                 if (item.isWarning)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(12),

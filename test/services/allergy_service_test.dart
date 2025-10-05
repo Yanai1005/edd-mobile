@@ -49,7 +49,8 @@ void main() {
       expect(detected, contains('乳製品'));
     });
 
-    test('detectAllergens should return empty list when no allergens found', () {
+    test('detectAllergens should return empty list when no allergens found',
+        () {
       const text = 'Vegetable soup with rice';
       final userAllergies = ['卵', '乳製品'];
 

@@ -40,11 +40,11 @@ class _TranslatedImageOverlayState extends State<TranslatedImageOverlay> {
 
   Future<void> _loadImage() async {
     setState(() => _isLoading = true);
-    
+
     final bytes = await widget.imageFile.readAsBytes();
     final codec = await ui.instantiateImageCodec(bytes);
     final frame = await codec.getNextFrame();
-    
+
     if (mounted) {
       setState(() {
         _image = frame.image;
@@ -115,10 +115,10 @@ class _TextOverlayPainter extends CustomPainter {
 
       // 背景を描画（元のテキストを隠す）
       final bgPaint = Paint()
-        ..color = block.isWarning 
-            ? Colors.red.withValues(alpha: 0.9) 
+        ..color = block.isWarning
+            ? Colors.red.withValues(alpha: 0.9)
             : Colors.white.withValues(alpha: 0.9);
-      
+
       canvas.drawRect(scaledBox, bgPaint);
 
       // 枠線を描画
@@ -126,12 +126,12 @@ class _TextOverlayPainter extends CustomPainter {
         ..color = block.isWarning ? Colors.red : Colors.blue
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0;
-      
+
       canvas.drawRect(scaledBox, borderPaint);
 
       // テキストを描画
       final textToShow = showOriginal ? block.text : block.translatedText;
-      
+
       if (textToShow.isNotEmpty) {
         _drawText(canvas, textToShow, scaledBox, block.isWarning);
       }
@@ -172,7 +172,7 @@ class _TextOverlayPainter extends CustomPainter {
             color: isWarning ? Colors.white : Colors.black,
             fontSize: fontSize,
             fontWeight: FontWeight.bold,
-            height: 1.0,  // 行間を最小に
+            height: 1.0, // 行間を最小に
           ),
         ),
         textAlign: TextAlign.center,
@@ -190,7 +190,8 @@ class _TextOverlayPainter extends CustomPainter {
 
       // フォントサイズを縮小
       fontSize = fontSize * 0.85;
-      if (fontSize < 4) {  // 最小フォントサイズを4まで下げる
+      if (fontSize < 4) {
+        // 最小フォントサイズを4まで下げる
         fontSize = 4;
         break;
       }
@@ -204,7 +205,7 @@ class _TextOverlayPainter extends CustomPainter {
     // テキストを中央に配置
     double x = box.left + padding;
     double y = box.top + padding;
-    
+
     // 中央寄せを計算
     if (textPainter.width < maxWidth) {
       x = box.left + padding + (maxWidth - textPainter.width) / 2;
@@ -239,10 +240,10 @@ class _TextOverlayPainter extends CustomPainter {
     // ボックスのサイズに基づいてフォントサイズを計算
     final height = box.height;
     final width = box.width;
-    
+
     double size;
     if (height < 10) {
-      size = 6;  // 極小ボックス用
+      size = 6; // 極小ボックス用
     } else if (height < 15) {
       size = 8;
     } else if (height < 20) {
@@ -266,7 +267,7 @@ class _TextOverlayPainter extends CustomPainter {
       size = size.clamp(8.0, 13.0);
     }
 
-    return size.clamp(4.0, 20.0);  // 絶対的な最小・最大値
+    return size.clamp(4.0, 20.0); // 絶対的な最小・最大値
   }
 
   void _drawWarningIcon(Canvas canvas, Rect box) {
@@ -278,7 +279,7 @@ class _TextOverlayPainter extends CustomPainter {
     final circlePaint = Paint()
       ..color = Colors.yellow
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawCircle(
       Offset(iconX + iconSize / 2, iconY + iconSize / 2),
       iconSize / 2,
@@ -311,7 +312,7 @@ class _TextOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(_TextOverlayPainter oldDelegate) {
     return oldDelegate.image != image ||
-           oldDelegate.textBlocks != textBlocks ||
-           oldDelegate.showOriginal != showOriginal;
+        oldDelegate.textBlocks != textBlocks ||
+        oldDelegate.showOriginal != showOriginal;
   }
 }

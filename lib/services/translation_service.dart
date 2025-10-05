@@ -6,16 +6,16 @@ class TranslationService {
   // テキストを日本語に翻訳
   Future<String> translateToJapanese(String text) async {
     if (text.isEmpty) return '';
-    
+
     // 空白のみの場合もスキップ
     if (text.trim().isEmpty) return text;
-    
+
     try {
       final translation = await _translator.translate(
         text,
         to: 'ja',
       );
-      
+
       // 翻訳結果が空でないことを確認
       final result = translation.text.trim();
       return result.isEmpty ? text : result;

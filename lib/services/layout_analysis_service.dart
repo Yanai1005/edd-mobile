@@ -16,11 +16,11 @@ class LayoutAnalysisService {
 
     // 2. 料理名候補を抽出
     final menuCandidates = <MenuItem>[];
-    
+
     for (int i = 0; i < sortedBlocks.length; i++) {
       final block = sortedBlocks[i];
       final text = block.text.trim();
-      
+
       // 料理名として適切か判定
       if (!_isLikelyMenuItemText(text)) {
         continue;
@@ -28,7 +28,7 @@ class LayoutAnalysisService {
 
       // 近くの価格情報を探す
       String? price = _findNearbyPrice(block, sortedBlocks);
-      
+
       // メニューアイテムを作成
       menuCandidates.add(MenuItem(
         originalText: block.text,
@@ -60,7 +60,7 @@ class LayoutAnalysisService {
   /// テキストが料理名らしいか判定
   bool _isLikelyMenuItemText(String text) {
     if (text.isEmpty) return false;
-    
+
     // 極端に短いテキストを除外
     if (text.length <= 2) return false;
 

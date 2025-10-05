@@ -5,7 +5,8 @@ import 'package:allergy_guard/main.dart';
 import 'package:allergy_guard/providers/menu_scan_provider.dart';
 
 void main() {
-  testWidgets('App should start and display AllergyGuard title', (WidgetTester tester) async {
+  testWidgets('App should start and display AllergyGuard title',
+      (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
@@ -13,7 +14,8 @@ void main() {
     expect(find.text('AllergyGuard'), findsWidgets);
   });
 
-  testWidgets('HomeScreen should display main UI elements', (WidgetTester tester) async {
+  testWidgets('HomeScreen should display main UI elements',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => MenuScanProvider(),
@@ -29,7 +31,8 @@ void main() {
     expect(find.byIcon(Icons.restaurant_menu), findsOneWidget);
   });
 
-  testWidgets('HomeScreen should show warning when no allergies are set', (WidgetTester tester) async {
+  testWidgets('HomeScreen should show warning when no allergies are set',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => MenuScanProvider(),
@@ -51,4 +54,3 @@ void main() {
     expect(find.byIcon(Icons.settings), findsOneWidget);
   });
 }
-
