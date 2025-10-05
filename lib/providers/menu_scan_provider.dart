@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../models/menu_item.dart';
 import '../services/camera_service.dart';
@@ -11,14 +12,14 @@ class MenuScanProvider with ChangeNotifier {
   final TranslationService _translationService = TranslationService();
   final AllergyService _allergyService = AllergyService();
 
-  dynamic _scannedImage; // File または XFile
+  File? _scannedImage;
   String _recognizedText = '';
   List<MenuItem> _menuItems = [];
   List<String> _userAllergies = [];
   bool _isLoading = false;
   String? _errorMessage;
 
-  dynamic get scannedImage => _scannedImage;
+  File? get scannedImage => _scannedImage;
   String get recognizedText => _recognizedText;
   List<MenuItem> get menuItems => _menuItems;
   List<String> get userAllergies => _userAllergies;

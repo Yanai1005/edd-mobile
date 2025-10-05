@@ -1,8 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import '../providers/menu_scan_provider.dart';
 import '../models/menu_item.dart';
 
@@ -44,7 +41,10 @@ class ScanResultScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,
                   ),
-                  child: _buildImage(provider.scannedImage),
+                  child: Image.file(
+                    provider.scannedImage!,
+                    fit: BoxFit.contain,
+                  ),
                 ),
                 
                 // 警告サマリー
@@ -109,34 +109,6 @@ class ScanResultScreen extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildImage(dynamic image) {
-    if (kIsWeb) {
-      // Web版ではXFileから表示
-      if (image is XFile) {
-        return Image.network(
-          image.path,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return const Center(
-              child: Text('画像を表示できません'),
-            );
-          },
-        );
-      }
-    } else {
-      // モバイル版ではFileから表示
-      if (image is File) {
-        return Image.file(
-          image,
-          fit: BoxFit.contain,
-        );
-      }
-    }
-    return const Center(
-      child: Text('画像を表示できません'),
     );
   }
 

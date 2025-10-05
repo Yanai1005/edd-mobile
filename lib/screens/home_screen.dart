@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../providers/menu_scan_provider.dart';
 import 'allergy_settings_screen.dart';
@@ -69,29 +68,7 @@ class HomeScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16),
                     ),
-                    const SizedBox(height: 24),
-                    if (kIsWeb)
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.info, color: Colors.blue),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Web版では一部機能が制限されています。完全な機能を利用するにはモバイルアプリをご使用ください。',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (kIsWeb) const SizedBox(height: 24),
+                    const SizedBox(height: 48),
                     if (provider.userAllergies.isEmpty)
                       Container(
                         padding: const EdgeInsets.all(16),
