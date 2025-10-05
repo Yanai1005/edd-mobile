@@ -144,20 +144,19 @@ class _TextOverlayPainter extends CustomPainter {
   }
 
   void _drawText(Canvas canvas, String text, Rect box, bool isWarning) {
-    // テキストが空の場合はデバッグ表示
+    // テキストが空の場合はスキップ
     if (text.trim().isEmpty) {
-      _drawDebugMarker(canvas, box, '空');
       return;
     }
 
-    // パディング
-    const padding = 4.0;
+    // パディングを動的に設定（小さいボックスには小さいパディング）
+    final padding = (box.width < 25 || box.height < 12) ? 1.0 : 2.0;
     final maxWidth = box.width - padding * 2;
     final maxHeight = box.height - padding * 2;
 
-    if (maxWidth <= 0 || maxHeight <= 0) {
-      _drawDebugMarker(canvas, box, '小');
-      return;
+    // ボックスが極端に小さい場合でも描画を試みる
+    if (maxWidth < 5 || maxHeight < 5) {
+      return; // さすがに小さすぎる場合はスキップ
     }
 
     // 初期フォントサイズを計算
@@ -165,7 +164,7 @@ class _TextOverlayPainter extends CustomPainter {
     TextPainter? textPainter;
 
     // テキストがボックスに収まるまでフォントサイズを調整
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 15; i++) {
       textPainter = TextPainter(
         text: TextSpan(
           text: text,
@@ -173,7 +172,7 @@ class _TextOverlayPainter extends CustomPainter {
             color: isWarning ? Colors.white : Colors.black,
             fontSize: fontSize,
             fontWeight: FontWeight.bold,
-            height: 1.1,
+            height: 1.0,  // 行間を詰める
           ),
         ),
         textAlign: TextAlign.center,
@@ -185,14 +184,14 @@ class _TextOverlayPainter extends CustomPainter {
       textPainter.layout(maxWidth: maxWidth);
 
       // テキストが収まったらループを抜ける
-      if (textPainter.height <= maxHeight) {
+      if (textPainter.height <= maxHeight && textPainter.width <= maxWidth) {
         break;
       }
 
       // フォントサイズを縮小
-      fontSize = fontSize * 0.9;
-      if (fontSize < 8) {  // 最小フォントサイズを8に
-        fontSize = 8;
+      fontSize = fontSize * 0.88;
+      if (fontSize < 5) {  // 最小フォントサイズを5まで下げる
+        fontSize = 5;
         break;
       }
     }
@@ -203,42 +202,24 @@ class _TextOverlayPainter extends CustomPainter {
     textPainter.layout(maxWidth: maxWidth);
 
     // テキストを中央に配置
-    final x = box.left + padding + (maxWidth - textPainter.width) / 2;
-    final y = box.top + padding + (maxHeight - textPainter.height) / 2;
-
-    // 安全に座標をクランプ
-    final safeX = x.clamp(box.left, (box.right - textPainter.width).clamp(box.left, box.right));
-    final safeY = y.clamp(box.top, (box.bottom - textPainter.height).clamp(box.top, box.bottom));
+    final x = box.left + padding + (maxWidth - textPainter.width).clamp(0, maxWidth) / 2;
+    final y = box.top + padding + (maxHeight - textPainter.height).clamp(0, maxHeight) / 2;
 
     // クリッピングしてはみ出しを防ぐ
     canvas.save();
     canvas.clipRect(box);
-    textPainter.paint(canvas, Offset(safeX, safeY));
+    textPainter.paint(canvas, Offset(x, y));
     canvas.restore();
   }
 
   void _drawDebugMarker(Canvas canvas, Rect box, String marker) {
-    // デバッグ用マーカーを描画
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: marker,
-        style: const TextStyle(
-          color: Colors.red,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    final x = box.left + (box.width - textPainter.width) / 2;
-    final y = box.top + (box.height - textPainter.height) / 2;
-    textPainter.paint(canvas, Offset(x, y));
+    // デバッグ用マーカー（現在は使用しない）
+    return;
   }
 
   int _getMaxLines(double height, double fontSize) {
     // 高さに基づいて最大行数を計算
-    final lines = (height / (fontSize * 1.1)).floor();
+    final lines = (height / fontSize).floor();
     return lines.clamp(1, 3);
   }
 
