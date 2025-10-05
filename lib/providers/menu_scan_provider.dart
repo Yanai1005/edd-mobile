@@ -6,14 +6,11 @@ import '../services/camera_service.dart';
 import '../services/ocr_service.dart';
 import '../services/translation_service.dart';
 import '../services/allergy_service.dart';
-import '../services/layout_analysis_service.dart';
-
 class MenuScanProvider with ChangeNotifier {
   final CameraService _cameraService = CameraService();
   final OcrService _ocrService = OcrService();
   final TranslationService _translationService = TranslationService();
   final AllergyService _allergyService = AllergyService();
-  final LayoutAnalysisService _layoutService = LayoutAnalysisService();
 
   File? _scannedImage;
   String _recognizedText = '';
@@ -125,7 +122,7 @@ class MenuScanProvider with ChangeNotifier {
         } catch (e) {
           // 翻訳失敗時は元のテキストを使用
           translated = block.text;
-          print('翻訳エラー: $e');
+          debugPrint('翻訳エラー: $e');
         }
 
         // アレルギーチェック（総合的な検出）

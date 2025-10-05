@@ -26,8 +26,8 @@ class LayoutAnalysisService {
         continue;
       }
 
-      // 近くの価格情報を探す
-      String? price = _findNearbyPrice(block, sortedBlocks);
+      // 近くの価格情報を探す（現在は使用しない）
+      // String? price = _findNearbyPrice(block, sortedBlocks);
 
       // メニューアイテムを作成
       menuCandidates.add(MenuItem(
@@ -106,40 +106,6 @@ class LayoutAnalysisService {
     return true;
   }
 
-  /// 指定されたブロックの近くにある価格情報を探す
-  String? _findNearbyPrice(TextBlock block, List<TextBlock> allBlocks) {
-    final blockCenter = Offset(
-      block.boundingBox.left + block.boundingBox.width / 2,
-      block.boundingBox.top + block.boundingBox.height / 2,
-    );
-
-    String? closestPrice;
-    double closestDistance = double.infinity;
-
-    for (final candidate in allBlocks) {
-      if (candidate == block) continue;
-
-      // 価格パターンかチェック
-      if (!_isPriceText(candidate.text)) continue;
-
-      // 距離を計算
-      final candidateCenter = Offset(
-        candidate.boundingBox.left + candidate.boundingBox.width / 2,
-        candidate.boundingBox.top + candidate.boundingBox.height / 2,
-      );
-
-      final distance = (blockCenter - candidateCenter).distance;
-
-      // より近い価格があれば更新
-      if (distance < closestDistance && distance < 200) {
-        // 200px以内のみ
-        closestDistance = distance;
-        closestPrice = candidate.text;
-      }
-    }
-
-    return closestPrice;
-  }
 
   /// テキストが価格情報かチェック
   bool _isPriceText(String text) {
@@ -175,7 +141,6 @@ class LayoutAnalysisService {
     for (final block in blocks) {
       final text = block.text;
       final height = block.boundingBox.height;
-      final width = block.boundingBox.width;
 
       // サイズに基づいて分類
       if (height > 30) {

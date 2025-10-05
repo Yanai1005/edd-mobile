@@ -1,4 +1,5 @@
 import 'package:translator/translator.dart';
+import 'package:flutter/foundation.dart';
 
 class TranslationService {
   final GoogleTranslator _translator = GoogleTranslator();
@@ -20,7 +21,7 @@ class TranslationService {
       final result = translation.text.trim();
       return result.isEmpty ? text : result;
     } catch (e) {
-      print('Translation error: $e');
+      debugPrint('Translation error: $e');
       // 翻訳失敗時は元のテキストを返す
       return text;
     }

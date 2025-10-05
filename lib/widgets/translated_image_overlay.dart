@@ -225,10 +225,6 @@ class _TextOverlayPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawDebugMarker(Canvas canvas, Rect box, String marker) {
-    // デバッグ用マーカー（現在は使用しない）
-    return;
-  }
 
   int _getMaxLines(double height, double fontSize) {
     // 高さに基づいて最大行数を計算
