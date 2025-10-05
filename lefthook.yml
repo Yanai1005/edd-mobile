@@ -1,0 +1,9 @@
+pre-push:
+  commands:
+    format:
+      glob: "*.dart"
+      run: dart format {staged_files}
+      stage_fixed: true
+    analyze:
+      run: flutter analyze --no-fatal-infos
+      fail_text: "Code analysis failed"
