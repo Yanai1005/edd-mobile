@@ -6,6 +6,7 @@ import '../services/camera_service.dart';
 import '../services/ocr_service.dart';
 import '../services/translation_service.dart';
 import '../services/allergy_service.dart';
+
 class MenuScanProvider with ChangeNotifier {
   final CameraService _cameraService = CameraService();
   final OcrService _ocrService = OcrService();

@@ -225,7 +225,6 @@ class _TextOverlayPainter extends CustomPainter {
     canvas.restore();
   }
 
-
   int _getMaxLines(double height, double fontSize) {
     // 高さに基づいて最大行数を計算
     final lines = (height / fontSize).floor();
