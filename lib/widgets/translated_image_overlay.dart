@@ -149,13 +149,13 @@ class _TextOverlayPainter extends CustomPainter {
       return;
     }
 
-    // パディングを動的に設定（小さいボックスには小さいパディング）
-    final padding = (box.width < 25 || box.height < 12) ? 1.0 : 2.0;
+    // パディングをさらに小さく（小さいボックスにはほぼなし）
+    final padding = (box.width < 20 || box.height < 10) ? 0.5 : 1.5;
     final maxWidth = box.width - padding * 2;
     final maxHeight = box.height - padding * 2;
 
     // ボックスが極端に小さい場合でも描画を試みる
-    if (maxWidth < 5 || maxHeight < 5) {
+    if (maxWidth < 3 || maxHeight < 3) {
       return; // さすがに小さすぎる場合はスキップ
     }
 
@@ -164,7 +164,7 @@ class _TextOverlayPainter extends CustomPainter {
     TextPainter? textPainter;
 
     // テキストがボックスに収まるまでフォントサイズを調整
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 20; i++) {
       textPainter = TextPainter(
         text: TextSpan(
           text: text,
@@ -172,7 +172,7 @@ class _TextOverlayPainter extends CustomPainter {
             color: isWarning ? Colors.white : Colors.black,
             fontSize: fontSize,
             fontWeight: FontWeight.bold,
-            height: 1.0,  // 行間を詰める
+            height: 1.0,  // 行間を最小に
           ),
         ),
         textAlign: TextAlign.center,
@@ -189,9 +189,9 @@ class _TextOverlayPainter extends CustomPainter {
       }
 
       // フォントサイズを縮小
-      fontSize = fontSize * 0.88;
-      if (fontSize < 5) {  // 最小フォントサイズを5まで下げる
-        fontSize = 5;
+      fontSize = fontSize * 0.85;
+      if (fontSize < 4) {  // 最小フォントサイズを4まで下げる
+        fontSize = 4;
         break;
       }
     }
@@ -202,8 +202,20 @@ class _TextOverlayPainter extends CustomPainter {
     textPainter.layout(maxWidth: maxWidth);
 
     // テキストを中央に配置
-    final x = box.left + padding + (maxWidth - textPainter.width).clamp(0, maxWidth) / 2;
-    final y = box.top + padding + (maxHeight - textPainter.height).clamp(0, maxHeight) / 2;
+    double x = box.left + padding;
+    double y = box.top + padding;
+    
+    // 中央寄せを計算
+    if (textPainter.width < maxWidth) {
+      x = box.left + padding + (maxWidth - textPainter.width) / 2;
+    }
+    if (textPainter.height < maxHeight) {
+      y = box.top + padding + (maxHeight - textPainter.height) / 2;
+    }
+
+    // 座標が有効な範囲内にあることを確認
+    x = x.clamp(box.left, box.right - 1);
+    y = y.clamp(box.top, box.bottom - 1);
 
     // クリッピングしてはみ出しを防ぐ
     canvas.save();
@@ -229,8 +241,12 @@ class _TextOverlayPainter extends CustomPainter {
     final width = box.width;
     
     double size;
-    if (height < 20) {
-      size = 10;  // 最小サイズを上げる
+    if (height < 10) {
+      size = 6;  // 極小ボックス用
+    } else if (height < 15) {
+      size = 8;
+    } else if (height < 20) {
+      size = 10;
     } else if (height < 30) {
       size = 12;
     } else if (height < 40) {
@@ -241,14 +257,16 @@ class _TextOverlayPainter extends CustomPainter {
       size = 18;
     }
 
-    // 幅が狭い場合は調整
-    if (width < 60) {
-      size = size.clamp(9.0, 12.0);
-    } else if (width < 100) {
-      size = size.clamp(10.0, 14.0);
+    // 幅が狭い場合はさらに調整
+    if (width < 30) {
+      size = size.clamp(5.0, 9.0);
+    } else if (width < 50) {
+      size = size.clamp(6.0, 11.0);
+    } else if (width < 80) {
+      size = size.clamp(8.0, 13.0);
     }
 
-    return size;
+    return size.clamp(4.0, 20.0);  // 絶対的な最小・最大値
   }
 
   void _drawWarningIcon(Canvas canvas, Rect box) {
