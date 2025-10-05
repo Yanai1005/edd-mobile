@@ -1,4 +1,3 @@
-import 'dart:ui';
 import '../models/text_block.dart';
 import '../models/menu_item.dart';
 
@@ -105,7 +104,6 @@ class LayoutAnalysisService {
 
     return true;
   }
-
 
   /// テキストが価格情報かチェック
   bool _isPriceText(String text) {
