@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../models/menu_item.dart';
+import '../models/text_block.dart';
 import '../services/camera_service.dart';
 import '../services/ocr_service.dart';
 import '../services/translation_service.dart';
@@ -15,6 +16,7 @@ class MenuScanProvider with ChangeNotifier {
   File? _scannedImage;
   String _recognizedText = '';
   List<MenuItem> _menuItems = [];
+  List<TextBlock> _textBlocks = [];
   List<String> _userAllergies = [];
   bool _isLoading = false;
   String? _errorMessage;
@@ -22,6 +24,7 @@ class MenuScanProvider with ChangeNotifier {
   File? get scannedImage => _scannedImage;
   String get recognizedText => _recognizedText;
   List<MenuItem> get menuItems => _menuItems;
+  List<TextBlock> get textBlocks => _textBlocks;
   List<String> get userAllergies => _userAllergies;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -93,33 +96,49 @@ class MenuScanProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      // 1. OCRでテキストを認識
-      _recognizedText = await _ocrService.recognizeText(_scannedImage!);
+      // 1. OCRでテキストと位置情報を認識
+      _textBlocks = await _ocrService.recognizeTextWithPosition(_scannedImage!);
       
-      if (_recognizedText.isEmpty) {
+      if (_textBlocks.isEmpty) {
         _setError('テキストを認識できませんでした');
         return;
       }
 
-      // 2. テキストを日本語に翻訳
-      final translations = await _translationService.translateLines(_recognizedText);
+      // 認識されたテキストを結合
+      _recognizedText = _textBlocks.map((block) => block.text).join('\n');
 
-      // 3. アレルギー物質をチェック
+      // 2. 各テキストブロックを翻訳してアレルギーチェック
+      final updatedBlocks = <TextBlock>[];
       _menuItems = [];
-      for (final entry in translations.entries) {
+
+      for (final block in _textBlocks) {
+        // 翻訳
+        final translated = await _translationService.translate(block.text);
+        
+        // アレルギーチェック（キーワードベース）
         final detectedAllergens = _allergyService.detectAllergens(
-          entry.key,
+          block.text,
           _userAllergies,
         );
 
+        // TextBlockを更新
+        final updatedBlock = block.copyWith(
+          translatedText: translated,
+          detectedAllergens: detectedAllergens,
+          isWarning: detectedAllergens.isNotEmpty,
+        );
+        updatedBlocks.add(updatedBlock);
+
+        // MenuItemも作成（リスト表示用）
         _menuItems.add(MenuItem(
-          originalText: entry.key,
-          translatedText: entry.value,
+          originalText: block.text,
+          translatedText: translated,
           detectedAllergens: detectedAllergens,
           isWarning: detectedAllergens.isNotEmpty,
         ));
       }
 
+      _textBlocks = updatedBlocks;
       notifyListeners();
     } catch (e) {
       _setError('画像の処理に失敗しました: $e');
@@ -130,19 +149,38 @@ class MenuScanProvider with ChangeNotifier {
 
   // メニューアイテムを再チェック
   void _recheckMenuItems() {
-    _menuItems = _menuItems.map((item) {
+    final updatedItems = <MenuItem>[];
+    final updatedBlocks = <TextBlock>[];
+    
+    for (final item in _menuItems) {
       final detectedAllergens = _allergyService.detectAllergens(
         item.originalText,
         _userAllergies,
       );
 
-      return MenuItem(
+      updatedItems.add(MenuItem(
         originalText: item.originalText,
         translatedText: item.translatedText,
         detectedAllergens: detectedAllergens,
         isWarning: detectedAllergens.isNotEmpty,
+      ));
+    }
+    
+    // TextBlocksも更新
+    for (final block in _textBlocks) {
+      final detectedAllergens = _allergyService.detectAllergens(
+        block.text,
+        _userAllergies,
       );
-    }).toList();
+
+      updatedBlocks.add(block.copyWith(
+        detectedAllergens: detectedAllergens,
+        isWarning: detectedAllergens.isNotEmpty,
+      ));
+    }
+    
+    _menuItems = updatedItems;
+    _textBlocks = updatedBlocks;
   }
 
   // スキャン結果をクリア
@@ -150,6 +188,7 @@ class MenuScanProvider with ChangeNotifier {
     _scannedImage = null;
     _recognizedText = '';
     _menuItems = [];
+    _textBlocks = [];
     _clearError();
     notifyListeners();
   }

@@ -34,4 +34,7 @@ class TranslationService {
 
     return translations;
   }
+
+  // 単一のテキストを翻訳（エイリアス）
+  Future<String> translate(String text) => translateToJapanese(text);
 }
